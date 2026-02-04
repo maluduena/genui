@@ -1,36 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/renderer/ui_renderer.dart';
-import '../../core/state/ui_state.dart';
 import 'left_menu.dart';
 import 'chat_panel.dart';
+import '../../dashboard/presentation/dashboard_host.dart';
+import '../../dashboard/dashboard_controller.dart';
 
 class ShellPage extends StatelessWidget {
-  final UIState uiState;
-
-  const ShellPage({required this.uiState, super.key});
+  ShellPage({super.key});
+  final dashboardController = DashboardController();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          const LeftMenu(),
-          // Main Content Area that listens to state changes
-          Expanded(
-            child: Container(
-              color: Colors.grey.shade50,
-              padding: const EdgeInsets.all(24),
-              child: ListenableBuilder(
-                listenable: uiState,
-                builder: (context, child) {
-                  return UIRenderer(uiState.rootNode);
-                },
-              ),
-            ),
-          ),
-          ChatPanel(uiState: uiState),
-        ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 900;
+
+        return Scaffold(
+          appBar: isMobile
+              ? AppBar(
+                  title: const Text('Tesorería'),
+                  leading: Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  ),
+                )
+              : null,
+
+          drawer: isMobile ? const LeftMenu() : null,
+
+          body: Row(
+            children: [
+              if (!isMobile) const LeftMenu(),
+             Expanded(
+      child: DashboardHost(
+        controller: dashboardController,
       ),
+    ),
+    SizedBox(
+      width: 320,
+      child: ChatPanel(
+        dashboardController: dashboardController,
+      ),
+    ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
